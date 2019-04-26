@@ -32,6 +32,8 @@ func main() {
 			value, err = command.Get(cmd)
 		} else if bytes.EqualFold(cmd[0], []byte("keys")) {
 			command.Keys()
+		} else if bytes.EqualFold(cmd[0], []byte("sadd")) {
+			value, err = command.SAdd(cmd)
 		}
 		if value != "" {
 			fmt.Printf("%s\n", value)
