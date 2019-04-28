@@ -60,9 +60,9 @@ func Set(cmd [][]byte) (string, error) {
 	return "ok", nil
 }
 
-func SAdd(cmd [][]byte) (string, error) {
+func Incr(cmd [][]byte) (string, error) {
 	if len(cmd) != 3 || cmd[1] == nil || len(cmd[1]) < 1 || cmd[2] == nil || len(cmd[2]) < 1 {
-		return "", errors.New("输入错误，请输入sadd [key] [数字]")
+		return "", errors.New("输入错误，请输入[key] [数字]")
 	}
 	key := string(cmd[1])
 	num := bytes.Runes(cmd[2])
