@@ -17,7 +17,6 @@ var (
 )
 
 func KVGet(key string) (*object.Sds, bool) {
-
 	val, ok := kv[key]
 	//fmt.Printf("key:%v, value: %v,ok %v", key, val, ok)
 	return val, ok
@@ -27,11 +26,16 @@ func KVSet(key string, value *object.Sds) {
 	kv[key] = value
 }
 
-func Keys() {
+func Keys() []string {
+	keySet := make([]string, len(kv))
+	a := 0
+	fmt.Println("keys...")
 	for k := range kv {
-		fmt.Println(k)
-		//fmt.Println(string(v.Data))
+		keySet[a] = k
+		a++
 	}
+	fmt.Println(keySet)
+	return keySet
 }
 func init() {
 	kv = make(map[string]*object.Sds)
