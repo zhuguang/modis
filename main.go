@@ -31,7 +31,7 @@ func initLocalTerminal() {
 		re, _ := regexp.Compile("\\s+")
 		line = re.ReplaceAll(line, []byte(" "))
 		cmd := bytes.Split(line, []byte(" "))
-		fmt.Println(len(cmd))
+		//fmt.Println(len(cmd))
 		cmd, v := validCmd(cmd)
 		if v {
 			continue
@@ -61,7 +61,7 @@ func initServer() {
 	listener, _ := net.Listen("tcp", "127.0.0.1:10001")
 	defer listener.Close()
 	for {
-		fmt.Println("准备")
+		fmt.Println("准备...")
 		conn, _ := listener.Accept()
 		go handleMessage(conn)
 		//conn.Close()
@@ -70,7 +70,6 @@ func initServer() {
 
 func handleCommand(cmd [][]byte) ([]string, error) {
 	//fmt.Printf("len:%v,%v,%v", len(cmd), len(cmd[len(cmd)-1]), cmd[len(cmd)-1])
-	fmt.Println("keys" + string(cmd[0]))
 	var err error
 	var value string
 	var ret []string
@@ -81,6 +80,7 @@ func handleCommand(cmd [][]byte) ([]string, error) {
 	} else if bytes.EqualFold(cmd[0], []byte("get")) {
 		value, err = command.Get(cmd)
 	} else if bytes.EqualFold(cmd[0], []byte("keys")) {
+		fmt.Println("to keys")
 		ret = command.Keys()
 	} else if bytes.EqualFold(cmd[0], []byte("incr")) {
 		value, err = command.Incr(cmd)
@@ -94,26 +94,22 @@ func handleCommand(cmd [][]byte) ([]string, error) {
 func handleMessage(conn net.Conn) {
 	for {
 		line := make([]byte, 1000)
-		fmt.Println("handle..")
 		num, err := conn.Read(line)
-		re, _ := regexp.Compile("\\s+")
+		//可以输出实际字符，可以输出\n \r\n \u2318 等等这种特殊字符
+		//fmt.Printf("%+q",line)
+		//接收到的字节数组，不足自定义字节数组长度的会被补\u0000，也就是unicode 0x00
+		re, _ := regexp.Compile("[\\s\u0000]+")
 		line = re.ReplaceAll(line, []byte(" "))
-
-		fmt.Printf("收到命令：%s", line)
 		cmd := bytes.Split(line, []byte(" "))
-		fmt.Println(len(cmd))
 		cmd, v := validCmd(cmd)
 		if v {
 			continue
 		}
-		fmt.Println(len(cmd))
 		response, errCmd := handleCommand(cmd)
 		if response != nil {
-			fmt.Println("ifrespon")
 			printConn(response, conn)
 		} else {
-			fmt.Println("elseconn")
-			conn.Write([]byte(" 1\r\n"))
+			conn.Write([]byte("\n"))
 		}
 		if errCmd != nil {
 			conn.Write([]byte(errCmd.Error() + "\n"))
@@ -132,13 +128,11 @@ func handleMessage(conn net.Conn) {
 	}
 }
 
-//这里二维数组用指针修改不生效？
+//todo 二维数组指针
 func validCmd(cmd [][]byte) ([][]byte, bool) {
 	last := cmd[len(cmd)-1]
-	//fmt.Printf("%v", last)
-	if last == nil || string(last) == "" {
+	if last == nil || bytes.EqualFold(last, nil) {
 		cmd = cmd[0 : len(cmd)-1]
-		fmt.Println("if?")
 		fmt.Println(len(cmd))
 		return cmd, false
 	}
@@ -146,9 +140,7 @@ func validCmd(cmd [][]byte) ([][]byte, bool) {
 }
 
 func printConn(rep []string, conn net.Conn) {
-	fmt.Printf("printConn%v", len(rep))
 	for _, info := range rep {
-		fmt.Println(info)
-		conn.Write([]byte(info))
+		conn.Write([]byte(info + "\n"))
 	}
 }
